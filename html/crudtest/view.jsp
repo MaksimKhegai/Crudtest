@@ -1,1 +1,0 @@
-<%@ include file="/html/crudtest/show_books.jsp" %>
