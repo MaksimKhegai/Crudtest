@@ -4,9 +4,9 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.security.permission.PermissionChecker;
 import com.liferay.portal.security.permission.PermissionThreadLocal;
+import com.liferay.test.portlet.NoSuchAuthorException;
 import com.liferay.test.portlet.model.Author;
 import com.liferay.test.portlet.permissions.AuthorPermission;
-import com.liferay.test.portlet.permissions.BookPermission;
 import com.liferay.test.portlet.service.AuthorLocalServiceUtil;
 
 public class AuthorsHolder {
@@ -17,18 +17,16 @@ public class AuthorsHolder {
 	private boolean editPermission;
 	private boolean deletePermission;
 
-	public AuthorsHolder(long groupId, long id) throws SystemException,
-			PortalException {
-		Author author = AuthorLocalServiceUtil.getAuthorById(id);
-
-		this.setAuthorId(id);
-		this.setName(author.getName());
-		this.setBirthDate(author.getBirthDate());
-		
-		PermissionChecker permissionChecker = PermissionThreadLocal.getPermissionChecker();
-		this.viewPermission = AuthorPermission.contains(permissionChecker, groupId, id, "VIEW");
-		this.editPermission = AuthorPermission.contains(permissionChecker, groupId, id, "UPDATE");
-		this.deletePermission = AuthorPermission.contains(permissionChecker, groupId, id, "DELETE");
+	public AuthorsHolder(long groupId, long id) throws PortalException, SystemException {
+		Author author;
+			author = AuthorLocalServiceUtil.getAuthorById(id);
+			this.setAuthorId(id);
+			this.setName(author.getName());
+			this.setBirthDate(author.getBirthDate());
+			
+			this.viewPermission = AuthorPermission.hasViewPermission(groupId, id);
+			this.editPermission = AuthorPermission.hasEditPermission(groupId, id);
+			this.deletePermission = AuthorPermission.hasDeletePermission(groupId, id);
 	}
 
 	public boolean isViewPermission() {

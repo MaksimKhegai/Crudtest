@@ -1,9 +1,8 @@
 package com.liferay.test.portlet.holders;
 
+import com.liferay.portal.kernel.exception.NestableException;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
-import com.liferay.portal.security.permission.PermissionChecker;
-import com.liferay.portal.security.permission.PermissionThreadLocal;
 import com.liferay.test.portlet.NoSuchAuthorException;
 import com.liferay.test.portlet.NoSuchBookException;
 import com.liferay.test.portlet.NoSuchGenreException;
@@ -29,23 +28,31 @@ public class BooksHolder {
 	private boolean editPermission;
 	private boolean deletePermission;
 
-	public BooksHolder(long groupId, long id) throws SystemException, PortalException {
-		Book book = BookLocalServiceUtil.getBookById(id);
-		Genre genre = GenreLocalServiceUtil.getGenreById(book.getGenreId());
+	public BooksHolder(long groupId, long id) throws NestableException {
+		Book book;
+		Genre genre;
+		Author author;
+		Publisher publisher;
+		try {
+			book = BookLocalServiceUtil.getBookById(id);
+			genre = GenreLocalServiceUtil.getGenreById(book.getGenreId());
+			author = AuthorLocalServiceUtil.getAuthorById(book.getAuthorId());
+			publisher = PublisherLocalServiceUtil.getPublisherById(book.getPublisherId());
 
-		Author author = AuthorLocalServiceUtil.getAuthorById(book.getAuthorId());
-		Publisher publisher = PublisherLocalServiceUtil.getPublisherById(book.getPublisherId());
-		this.bookId = id;
-		this.name = book.getName();
-		this.releaseDate = book.getReleaseDate();
-		this.genre = genre.getName();
-		this.author = author.getName();
-		this.publisher = publisher.getName();
-
-		PermissionChecker permissionChecker = PermissionThreadLocal.getPermissionChecker();
-		this.viewPermission = BookPermission.contains(permissionChecker, groupId, id, "VIEW");
-		this.editPermission = BookPermission.contains(permissionChecker, groupId, id, "UPDATE");
-		this.deletePermission = BookPermission.contains(permissionChecker, groupId, id, "DELETE");
+			this.bookId = id;
+			this.name = book.getName();
+			this.releaseDate = book.getReleaseDate();
+			this.genre = genre.getName();
+			this.author = author.getName();
+			this.publisher = publisher.getName();
+	
+			this.viewPermission = BookPermission.hasViewPermission(groupId, id);
+			this.editPermission = BookPermission.hasEditPermission(groupId, id);
+			this.deletePermission = BookPermission.hasDeletePermission(groupId, id);
+		} catch (NoSuchBookException | SystemException | NoSuchPublisherException
+				| NoSuchAuthorException | NoSuchGenreException e) {
+			e.printStackTrace();
+		}
 	}
 
 	public String getName() {

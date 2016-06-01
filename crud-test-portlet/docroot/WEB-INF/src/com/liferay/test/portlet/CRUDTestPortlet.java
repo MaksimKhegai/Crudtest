@@ -1,10 +1,7 @@
 package com.liferay.test.portlet;
 
 import java.io.IOException;
-import java.text.ParseException;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Enumeration;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -14,20 +11,15 @@ import javax.portlet.ActionResponse;
 import javax.portlet.PortletException;
 import javax.portlet.RenderRequest;
 import javax.portlet.RenderResponse;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.jsp.PageContext;
 
+import com.liferay.portal.kernel.exception.NestableException;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.servlet.SessionErrors;
 import com.liferay.portal.kernel.servlet.SessionMessages;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.WebKeys;
-import com.liferay.portal.model.ResourceConstants;
-import com.liferay.portal.model.Role;
 import com.liferay.portal.service.ResourceLocalServiceUtil;
-import com.liferay.portal.service.ResourcePermissionServiceUtil;
-import com.liferay.portal.service.RoleLocalServiceUtil;
 import com.liferay.portal.theme.ThemeDisplay;
 import com.liferay.portal.util.PortalUtil;
 import com.liferay.util.bridges.mvc.MVCPortlet;
@@ -74,13 +66,12 @@ public class CRUDTestPortlet extends MVCPortlet {
 		ThemeDisplay themeDisplay = (ThemeDisplay) request.getAttribute(WebKeys.THEME_DISPLAY);
 		long groupId = themeDisplay.getLayout().getGroupId();
 		try {
-			request.setAttribute("booksArray", getAllBooksInfo(groupId));
 			request.setAttribute("authorsArray", getAllAuthorsInfo(groupId));
 			request.setAttribute("genresArray", getAllGenresInfo(groupId));
 			request.setAttribute("publishersArray", getAllPublishersInfo(groupId));
-		} catch (SystemException | PortalException e1) {
+			request.setAttribute("booksArray", getAllBooksInfo(groupId));
+		} catch (NestableException e) {
 			SessionErrors.add(request, "getInfoError");
-			return;
 		}
 		request.setAttribute("currentBookIndex", currentBookIndex);
 		request.setAttribute("currentAuthorIndex", currentAuthorIndex);
@@ -101,16 +92,35 @@ public class CRUDTestPortlet extends MVCPortlet {
 	}
 
 	/**
+	 * Updates permissions information
+	 * 
+	 */
+	void updateResources(ActionRequest request, long companyId, long groupId, String className,
+			long id) {
+		try {
+			String[] guestPerms = request.getParameterValues("guestPermissions");
+			String[] groupPerms = request.getParameterValues("groupPermissions");
+			if (groupPerms == null) {
+				groupPerms = new String[]{"VIEW"};
+			}
+			ResourceLocalServiceUtil.updateResources(companyId, groupId, className, id, groupPerms,
+					guestPerms);
+		} catch (PortalException | SystemException e) {
+			SessionErrors.add(request, "permissionsUpdateError");
+		}
+	}
+
+	/**
 	 * Get all information about books in one array
 	 * 
 	 * @return array containing BooksHolders
-	 * @throws PortalException
-	 * @throws SystemException
+	 * @throws NestableException
 	 */
-	public List<BooksHolder> getAllBooksInfo(long groupId) throws SystemException, PortalException {
+	public List<BooksHolder> getAllBooksInfo(long groupId) throws NestableException {
 		List<BooksHolder> list = new ArrayList<BooksHolder>();
 		for (Book book : BookLocalServiceUtil.getBooks()) {
-			BooksHolder booksHolder = new BooksHolder(groupId, book.getBookId());
+			BooksHolder booksHolder;
+			booksHolder = new BooksHolder(groupId, book.getBookId());
 			list.add(booksHolder);
 		}
 		return list;
@@ -209,20 +219,22 @@ public class CRUDTestPortlet extends MVCPortlet {
 			return;
 		}
 		try {
-			AuthorLocalServiceUtil.addAuthor(companyId, groupId,
-					PortalUtil.getUserId(request), authorId, ParamUtil.getString(request, "Name"),
+			AuthorLocalServiceUtil.addAuthor(companyId, groupId, PortalUtil.getUserId(request),
+					authorId, ParamUtil.getString(request, "Name"),
 					ParamUtil.getString(request, "BirthDate"));
 		} catch (SystemException e) {
 			SessionErrors.add(request, "addError");
 			return;
 		}
-		try {
-			ResourceLocalServiceUtil.updateResources(companyId, groupId, Author.class.getName(),
-					String.valueOf(authorId), request.getParameterValues("groupPermissions"),
-					request.getParameterValues("guestPermissions"));
-		} catch (PortalException | SystemException e) {
-			SessionErrors.add(request, "permissionsUpdateError");
-		}
+		updateResources(request, companyId, groupId, Author.class.getName(), authorId);
+		/*
+		 * try { ResourceLocalServiceUtil.updateResources(companyId, groupId,
+		 * Author.class.getName(), String.valueOf(authorId),
+		 * request.getParameterValues("groupPermissions"),
+		 * request.getParameterValues("guestPermissions")); } catch
+		 * (PortalException | SystemException e) { SessionErrors.add(request,
+		 * "permissionsUpdateError"); }
+		 */
 		response.setRenderParameter("mvcPath", "/html/crudtest/show_authors.jsp");
 	}
 
@@ -335,13 +347,15 @@ public class CRUDTestPortlet extends MVCPortlet {
 		 * System.out.println(user.getUserId()); } catch (PortalException e) {
 		 * e.printStackTrace(); }
 		 */
-		try {
-			ResourceLocalServiceUtil.updateResources(companyId, groupId, Book.class.getName(),
-					String.valueOf(bookId), request.getParameterValues("groupPermissions"),
-					request.getParameterValues("guestPermissions"));
-		} catch (PortalException | SystemException e) {
-			SessionErrors.add(request, "permissionsUpdateError");
-		}
+		/*
+		 * try { ResourceLocalServiceUtil.updateResources(companyId, groupId,
+		 * Book.class.getName(), String.valueOf(bookId),
+		 * request.getParameterValues("groupPermissions"),
+		 * request.getParameterValues("guestPermissions")); } catch
+		 * (PortalException | SystemException e) { SessionErrors.add(request,
+		 * "permissionsUpdateError"); }
+		 */
+		updateResources(request, companyId, groupId, Book.class.getName(), bookId);
 
 	}
 
@@ -428,20 +442,21 @@ public class CRUDTestPortlet extends MVCPortlet {
 			return;
 		}
 		try {
-			GenreLocalServiceUtil.addGenre(companyId, groupId,
-					PortalUtil.getUserId(request), genreId, ParamUtil.getString(request, "Name"));
+			GenreLocalServiceUtil.addGenre(companyId, groupId, PortalUtil.getUserId(request),
+					genreId, ParamUtil.getString(request, "Name"));
 		} catch (SystemException e) {
 			SessionErrors.add(request, "addError");
 			return;
 		}
-		try {
-			ResourceLocalServiceUtil.updateResources(companyId, groupId, Genre.class.getName(),
-					String.valueOf(genreId), request.getParameterValues("groupPermissions"),
-					request.getParameterValues("guestPermissions"));
-		} catch (PortalException | SystemException e) {
-			SessionErrors.add(request, "permissionsUpdateError");
-			return;
-		}
+		/*
+		 * try { ResourceLocalServiceUtil.updateResources(companyId, groupId,
+		 * Genre.class.getName(), String.valueOf(genreId),
+		 * request.getParameterValues("groupPermissions"),
+		 * request.getParameterValues("guestPermissions")); } catch
+		 * (PortalException | SystemException e) { SessionErrors.add(request,
+		 * "permissionsUpdateError"); return; }
+		 */
+		updateResources(request, companyId, groupId, Genre.class.getName(), genreId);
 		response.setRenderParameter("mvcPath", "/html/crudtest/show_genres.jsp");
 	}
 
@@ -523,20 +538,15 @@ public class CRUDTestPortlet extends MVCPortlet {
 			return;
 		}
 		try {
-			PublisherLocalServiceUtil.addPublisher(companyId,
-					groupId, PortalUtil.getUserId(request), publisherId,
+			PublisherLocalServiceUtil.addPublisher(companyId, groupId,
+					PortalUtil.getUserId(request), publisherId,
 					ParamUtil.getString(request, "Name"));
 		} catch (SystemException e) {
 			SessionErrors.add(request, "addError");
 			return;
 		}
-		try {
-			ResourceLocalServiceUtil.updateResources(companyId, groupId, Publisher.class.getName(),
-					String.valueOf(publisherId), request.getParameterValues("groupPermissions"),
-					request.getParameterValues("guestPermissions"));
-		} catch (PortalException | SystemException e) {
-			SessionErrors.add(request, "permissionsUpdateError");
-		}
+		updateResources(request, companyId, groupId, Publisher.class.getName(), publisherId);
+
 		response.setRenderParameter("mvcPath", "/html/crudtest/show_publishers.jsp");
 	}
 

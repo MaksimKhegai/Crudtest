@@ -4,6 +4,7 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.security.permission.PermissionChecker;
 import com.liferay.portal.security.permission.PermissionThreadLocal;
+import com.liferay.test.portlet.NoSuchGenreException;
 import com.liferay.test.portlet.model.Genre;
 import com.liferay.test.portlet.permissions.BookPermission;
 import com.liferay.test.portlet.permissions.GenrePermission;
@@ -16,17 +17,15 @@ public class GenresHolder {
 	private boolean editPermission;
 	private boolean deletePermission;
 
-	public GenresHolder(long groupId, long id) throws SystemException,
-			PortalException {
-		Genre genre = GenreLocalServiceUtil.getGenreById(id);
-
-		this.setGenreId(id);
-		this.setName(genre.getName());
-		
-		PermissionChecker permissionChecker = PermissionThreadLocal.getPermissionChecker();
-		this.viewPermission = GenrePermission.contains(permissionChecker, groupId, id, "VIEW");
-		this.editPermission = GenrePermission.contains(permissionChecker, groupId, id, "UPDATE");
-		this.deletePermission = GenrePermission.contains(permissionChecker, groupId, id, "DELETE");
+	public GenresHolder(long groupId, long id) throws PortalException, SystemException {
+		Genre genre;
+			genre = GenreLocalServiceUtil.getGenreById(id);
+			this.setGenreId(id);
+			this.setName(genre.getName());
+			
+			this.viewPermission = GenrePermission.hasViewPermission(groupId, id);
+			this.editPermission = GenrePermission.hasEditPermission(groupId, id);
+			this.deletePermission = GenrePermission.hasDeletePermission(groupId, id);
 	}
 
 	public boolean isViewPermission() {

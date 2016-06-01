@@ -2,10 +2,8 @@ package com.liferay.test.portlet.holders;
 
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
-import com.liferay.portal.security.permission.PermissionChecker;
-import com.liferay.portal.security.permission.PermissionThreadLocal;
+import com.liferay.test.portlet.NoSuchPublisherException;
 import com.liferay.test.portlet.model.Publisher;
-import com.liferay.test.portlet.permissions.BookPermission;
 import com.liferay.test.portlet.permissions.PublisherPermission;
 import com.liferay.test.portlet.service.PublisherLocalServiceUtil;
 
@@ -16,17 +14,15 @@ public class PublishersHolder {
 	private boolean editPermission;
 	private boolean deletePermission;
 
-	public PublishersHolder(long groupId, long id) throws SystemException,
-			PortalException {
-		Publisher publisher = PublisherLocalServiceUtil.getPublisherById(id);
-
-		this.setPublisherId(id);
-		this.setName(publisher.getName());
-		
-		PermissionChecker permissionChecker = PermissionThreadLocal.getPermissionChecker();
-		this.viewPermission = PublisherPermission.contains(permissionChecker, groupId, id, "VIEW");
-		this.editPermission = PublisherPermission.contains(permissionChecker, groupId, id, "UPDATE");
-		this.deletePermission = PublisherPermission.contains(permissionChecker, groupId, id, "DELETE");
+	public PublishersHolder(long groupId, long id) throws SystemException, PortalException {
+		Publisher publisher;
+			publisher = PublisherLocalServiceUtil.getPublisherById(id);
+			this.setPublisherId(id);
+			this.setName(publisher.getName());
+			
+			this.viewPermission = PublisherPermission.hasViewPermission(groupId, id);
+			this.editPermission = PublisherPermission.hasEditPermission(groupId, id);
+			this.deletePermission = PublisherPermission.hasDeletePermission(groupId, id);	
 	}
 
 	public boolean isViewPermission() {
