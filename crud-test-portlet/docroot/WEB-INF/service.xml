@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE service-builder PUBLIC "-//Liferay//DTD Service Builder 6.2.0//EN" "http://www.liferay.com/dtd/liferay-service-builder_6_2_0.dtd">
+<service-builder package-path="com.liferay.test.portlet">
+	<author>kmv</author>
+	<namespace>TB</namespace>
+
+	<entity name="Book" local-service="true" remote-service="false">
+		<column name="bookId" type="long" primary="true"></column>
+		<column name="genreId" type="long"></column>
+		<column name="publisherId" type="long"></column>
+		<column name="authorId" type="long"></column>
+		<column name="name" type="String"></column>
+		<column name="releaseDate" type="String"></column>
+	</entity>
+    <entity name="Author" local-service="true" remote-service="false">
+        <column name="authorId" primary="true" type="long"></column>
+        <column name="name" type="String"></column>
+        <column name="birthDate" type="String"></column>
+    </entity>
+    <entity name="Genre" local-service="true" remote-service="false">
+        <column name="genreId" type="long" primary="true"></column>
+        <column name="name" type="String"></column>
+    </entity>
+    <entity name="Publisher" local-service="true" remote-service="false">
+        <column name="publisherId" type="long" primary="true"></column>
+        <column name="name" type="String"></column>
+    </entity>
+</service-builder>
