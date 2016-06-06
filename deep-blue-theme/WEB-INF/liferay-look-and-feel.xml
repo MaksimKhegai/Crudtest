@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<!DOCTYPE look-and-feel PUBLIC "-//Liferay//DTD Look and Feel 6.2.0//EN" "http://www.liferay.com/dtd/liferay-look-and-feel_6_2_0.dtd">
+
+<look-and-feel>
+	<compatibility>
+		<version>6.2.5+</version>
+	</compatibility>
+	<theme id="deep-blue" name="Deep Blue">
+		<settings>
+			<setting configurable="true" key="my-setting" type="textarea" value="my-value"></setting>
+			<setting configurable="true" key="display-setting" type="checkbox" value="true"></setting>
+			<setting configurable="true" key="portlet-setup-show-borders-default" type="checkbox" value="false"></setting>
+			<setting configurable="true" key="show-site-name-default" type="checkbox" value="true"></setting>
+		</settings>
+		<color-scheme id="01" name="Day">
+			<css-class>day</css-class>
+		</color-scheme>
+		<color-scheme id="02" name="Night">
+			<css-class>night</css-class>
+			<color-scheme-images-path>${images-path}/color_schemes/${css-class}</color-scheme-images-path>
+		</color-scheme>
+	</theme>
+</look-and-feel>
